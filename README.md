@@ -2,7 +2,7 @@
 
 <!-- PROJECT LOGO -->
 <div align="center">
-  <h3 align="center">Automated SaaS Onboarding Triage Pipeline</h3>
+  <h3 align="center">Automated Onboarding Triage Pipeline</h3>
 
   <p align="center">
     Autonomous AI-driven triage architecture for enterprise SaaS onboarding.
