@@ -1,1 +1,21 @@
-.
+{
+  "client_id": "ENT-8992-AZ",
+  "company_name": "Vertex Global Logistics",
+  "onboarding_tier": "Enterprise Dedicated",
+  "system_timezone": "Asia/Kolkata",
+  "infrastructure_target": "Azure Cloud",
+  "ingestion_settings": {
+    "protocol": "SFTP",
+    "ssl_certificate_valid": true,
+    "api_key_provided": false,
+    "max_batch_size_mb": 500
+  },
+  "data_pipelines": [
+    {
+      "pipeline_name": "inventory_sync_prod",
+      "status": "active",
+      "mapping_schema_id": "schema_99A",
+      "last_test_run": "failed"
+    }
+  ]
+}
