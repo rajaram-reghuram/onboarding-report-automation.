@@ -1,0 +1,21 @@
+{
+  "client_id": "ENT-1526-AW",
+  "company_name": "Sigma Enterprises",
+  "onboarding_tier": "Product Outlining",
+  "system_timezone": "London/UK",
+  "infrastructure_target": "AWS Cloud",
+  "ingestion_settings": {
+    "protocol": "SFTP",
+    "ssl_certificate_valid": true,
+    "api_key_provided": true,
+    "max_batch_size_mb": 1000
+  },
+  "data_pipelines": [
+    {
+      "pipeline_name": "sync_prod",
+      "status": "active",
+      "mapping_schema_id": "schema_99A",
+      "last_test_run": "passed"
+    }
+  ]
+}
