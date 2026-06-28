@@ -1,0 +1,241 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this incoming client configuration payload: {{ $json.body.toJsonString() }}",
+        "options": {
+          "systemMessage": "You are an expert SaaS Onboarding Technical Analyst. Review the incoming JSON payload. Identify any missing mandatory fields (e.g., missing API keys or null schema IDs) and failed pipeline tests. Output a structured Markdown runbook containing: 1. Account Overview. 2. Critical Blockers. 3. Action Items.\n\nCRITICAL RULE: Do not include any conversational filler, greetings, introductory text, or concluding remarks (e.g., never say \"As an expert...\" or \"Here is the runbook...\"). You must output ONLY the raw Markdown document, starting immediately with ## Onboarding Runbook: [Company Name]."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d891d8aa-be03-42d3-995a-1dbad1774a2c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "fc34ccc9-691f-4da0-bf4d-4d476f2b2eee",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aLtitx78hq54KSSj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "enterprise-onboarding-triage",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ba6e2dc1-3755-4746-8e37-c3a2ba594995",
+      "name": "Webhook",
+      "webhookId": "d39ad720-7868-4f54-afe6-b1cae25576f2"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').first().json.body.client_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        208
+      ],
+      "id": "164e13ce-855b-4f7d-94f2-3c367c4ecff6",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "73d3d81c-b473-4aa3-94ac-935269a053c5",
+              "name": "onboarding_runbook",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "08185aa3-988e-4c91-ae97-bbe94126eabe",
+              "name": "client_metadata",
+              "value": "={{ $('Webhook').first().json.body }}",
+              "type": "object"
+            },
+            {
+              "id": "ecbf7fc1-3d88-4826-aa74-f7b564b978a7",
+              "name": "triage_status",
+              "value": "PROCESSED_AND_AUDITED",
+              "type": "string"
+            },
+            {
+              "id": "56b8f6d1-fc14-46ae-9c98-618a4675da23",
+              "name": "processed_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        0
+      ],
+      "id": "256051e6-f57e-442e-a906-7ec51701c781",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://md-to-pdf.fly.dev",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "markdown",
+              "value": "={{ $json.onboarding_runbook }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        768,
+        0
+      ],
+      "id": "c43d3095-221f-4381-b171-dfd51d3568e6",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Grab the company name from the Webhook and dynamically name the PDF\nconst companyName = $('Webhook').first().json.body.company_name;\n$input.first().binary.data.fileName = `${companyName}_Runbook.pdf`;\n\nreturn $input.first();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -16
+      ],
+      "id": "282ada5b-96b7-4957-ac3f-edcfa4b32cd2",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "33b54fe0-59d4-49ed-8d40-16ddcc4ac84a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3eab6212f8c694dddb6d0c5bc4a052b91d092606a6b41f5bf39c0fdbcdf254b6"
+  },
+  "nodeGroups": [],
+  "id": "4VAhv4mkxUaZ9Qti",
+  "tags": []
+}
